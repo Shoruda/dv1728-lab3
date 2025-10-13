@@ -135,7 +135,7 @@ int main(int argc, char *argv[]){
   }
   printf("%s", buffer);
   fflush(stdout);
-
+  "a"
   tcgetattr(STDIN_FILENO, &t);
   t.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
