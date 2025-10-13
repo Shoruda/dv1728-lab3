@@ -167,12 +167,18 @@ int main(int argc, char *argv[]){
         break;
       }
       buffer[bytes] = '\0';
-      buffer[strcspn(buffer, "\n")] = '\0';
-
-      if (strncmp(buffer, "MSG ", 4) == 0) {
-        printf("%s\n", buffer + 4);
-      } else {
-        printf("%s\n", buffer);
+      char *line = buffer;
+      char *next_line;
+      
+      while ((next_line = strchr(line, '\n')) != NULL) {
+        *next_line = '\0';
+        
+        if (strncmp(line, "MSG ", 4) == 0) {
+          printf("%s\n", line + 4);
+        } else if (strlen(line) > 0) {
+          printf("%s\n", line);
+        }    
+        line = next_line + 1;
       }
       fflush(stdout);
     }
