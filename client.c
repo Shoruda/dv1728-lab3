@@ -111,6 +111,7 @@ int main(int argc, char *argv[]){
   }
 
   printf("Handshake OK: %s", buffer);
+  fflush(stdout);
   snprintf(buffer, sizeof(buffer), "NICK %s\n", nickname);
   if (send(sockfd, buffer, strlen(buffer), 0) < 0) 
   {
@@ -127,18 +128,20 @@ int main(int argc, char *argv[]){
   }
   buffer[bytes] = '\0';
 
-  if (strncmp(buffer, "OK\n", 3) != 0) {
+  if (strncmp(buffer, "OK", 3) != 0) {
     fprintf(stderr, "ERROR: expected OK from server, got: %s\n", buffer);
     close(sockfd);
     exit(1);
   }
   printf("%s", buffer);
+  fflush(stdout);
 
   tcgetattr(STDIN_FILENO, &t);
   t.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
 
   printf("You can now type messages. Press Ctrl+C to exit.\n");
+  fflush(stdout);
 
   fd_set readfds;
   while (1) 
