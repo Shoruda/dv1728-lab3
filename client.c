@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
   if (argc != 3)
   {
     fprintf(stderr, "Usage: %s <server_ip:port> <nickname>\n", argv[0]);
-    exit(EXIT_FAILURE);
+    exit(1);
   }
 
   char *address = argv[1];
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]){
   if (!sep) 
   {
     fprintf(stderr, "Error: address must be in format IP:PORT\n");
-    exit(EXIT_FAILURE);
+    exit(1);
   }
 
   *sep = '\0';
@@ -58,10 +58,11 @@ int main(int argc, char *argv[]){
   char *port = sep + 1;
   char *nickname = argv[2];
 
-  if (!valid_nick(nickname)) {
+  if (!valid_nick(nickname)) 
+  {
     fprintf(stderr, "ERROR: invalid nickname. Only A-Z, a-z, 0-9, _, ) allowed, max 12 chars\n");
     exit(1);
-}
+  }
 
   struct addrinfo hints, *res;
   memset(&hints, 0, sizeof(hints));
@@ -207,5 +208,4 @@ int main(int argc, char *argv[]){
 
   close(sockfd);
   return 0;
-
 }
