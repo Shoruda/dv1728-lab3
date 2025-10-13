@@ -50,24 +50,24 @@ int main(int argc, char *argv[]){
   int status = getaddrinfo(server_ip, port, &hints, &res);
   if (status != 0) 
   {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
-    exit(EXIT_FAILURE);
+    fprintf(stderr, "ERROR: getaddrinfo failed: %s\n", gai_strerror(status));
+    exit(1);
   }
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   if (sockfd < 0) 
   {
-    perror("socket");
+    fprintf(stderr, "ERROR: socket creation failed: %s\n", strerror(errno));
     freeaddrinfo(res);
-    exit(EXIT_FAILURE);
+    exit(1);
   }
 
   if (connect(sockfd, res->ai_addr, res->ai_addrlen) < 0) 
   {
-    perror("connect");
+    fprintf(stderr, "ERROR: connect failed: %s\n", strerror(errno));
     freeaddrinfo(res);
     close(sockfd);
-    exit(EXIT_FAILURE);
+    exit(1);
   }
 
   freeaddrinfo(res);
@@ -76,22 +76,28 @@ int main(int argc, char *argv[]){
   char buffer[BUF_SIZE];
   int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
   if (bytes <= 0) {
-    fprintf(stderr, "Server closed connection before handshake.\n");
+    fprintf(stderr, "ERROR: server closed connection before handshake\n");
     close(sockfd);
-    exit(EXIT_FAILURE);
+    exit(1);
   }
   buffer[bytes] = '\0';
 
   if (strncmp(buffer, "HELLO 1\n", 9) != 0) 
   {
-    fprintf(stderr, "Unexpected handshake from server: %s\n", buffer);
+    fprintf(stderr, "ERROR: unexpected handshake from server: %s\n", buffer);
     close(sockfd);
-    exit(EXIT_FAILURE);
+    exit(1);
   }
 
   printf("Handshake OK: %s\n", buffer);
   snprintf(buffer, sizeof(buffer), "NICK %s\n", nickname);
   send(sockfd, buffer, strlen(buffer), 0);
+  if (send(sockfd, buffer, strlen(buffer), 0) < 0) 
+  {
+    fprintf(stderr, "ERROR: send failed: %s\n", strerror(errno));
+    close(sockfd);
+    exit(1);
+  }
 
   tcgetattr(STDIN_FILENO, &t);
   t.c_lflag &= ~(ECHO | ICANON);
@@ -110,7 +116,7 @@ int main(int argc, char *argv[]){
     int activity = select(maxfd + 1, &readfds, NULL, NULL, NULL);
     if (activity < 0) 
     {
-      perror("select");
+      fprintf(stderr, "ERROR: select failed: %s\n", strerror(errno));
       break;
     }
 
