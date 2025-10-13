@@ -119,6 +119,21 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
+  bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+  if (bytes <= 0) {
+    fprintf(stderr, "ERROR: server closed connection after NICK\n");
+    close(sockfd);
+    exit(1);
+  }
+  buffer[bytes] = '\0';
+
+  if (strncmp(buffer, "OK\n", 3) != 0) {
+    fprintf(stderr, "ERROR: expected OK from server, got: %s\n", buffer);
+    close(sockfd);
+    exit(1);
+  }
+  printf("%s", buffer);
+
   tcgetattr(STDIN_FILENO, &t);
   t.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
