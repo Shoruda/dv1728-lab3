@@ -170,9 +170,9 @@ int main(int argc, char *argv[]){
       buffer[strcspn(buffer, "\n")] = '\0';
 
       if (strncmp(buffer, "MSG ", 4) == 0) {
-        printf("\r%s\n> ", buffer + 4);
+        printf("%s\n", buffer + 4);
       } else {
-        printf("\r%s\n> ", buffer);
+        printf("%s\n", buffer);
       }
       fflush(stdout);
     }
