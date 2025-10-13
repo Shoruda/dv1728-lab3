@@ -135,7 +135,7 @@ int main(int argc, char *argv[]){
   }
   printf("%s", buffer);
   fflush(stdout);
-  "a"
+
   tcgetattr(STDIN_FILENO, &t);
   t.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
@@ -189,7 +189,6 @@ int main(int argc, char *argv[]){
           char msg[BUF_SIZE];
           snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
           send(sockfd, msg, strlen(msg), 0);
-          printf("> ");
           fflush(stdout);
         }
       }
