@@ -74,6 +74,22 @@ int main(int argc, char *argv[]){
   printf("Connected to %s:%s as %s\n", server_ip, port, nickname);
 
   char buffer[BUF_SIZE];
+  int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+  if (bytes <= 0) {
+    fprintf(stderr, "Server closed connection before handshake.\n");
+    close(sockfd);
+    exit(EXIT_FAILURE);
+  }
+  buffer[bytes] = '\0';
+
+  if (strncmp(buffer, "HELLO 1\n", 9) != 0) 
+  {
+    fprintf(stderr, "Unexpected handshake from server: %s\n", buffer);
+    close(sockfd);
+    exit(EXIT_FAILURE);
+  }
+
+  printf("Handshake OK: %s\n", buffer);
   snprintf(buffer, sizeof(buffer), "NICK %s\n", nickname);
   send(sockfd, buffer, strlen(buffer), 0);
 
