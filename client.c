@@ -19,6 +19,22 @@
 
 struct termios t;
 
+int valid_nick(const char *nick) {
+  size_t len = strlen(nick);
+  if (len == 0 || len > 12) return 0;
+
+  for (size_t i = 0; i < len; i++) {
+    char c = nick[i];
+    if (!((c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') ||
+        c == '_' || c == ')')) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int main(int argc, char *argv[]){
   
   /* Do magic */
@@ -41,6 +57,11 @@ int main(int argc, char *argv[]){
   char *server_ip = address;
   char *port = sep + 1;
   char *nickname = argv[2];
+
+  if (!valid_nick(nickname)) {
+    fprintf(stderr, "ERROR: invalid nickname. Only A-Z, a-z, 0-9, _, ) allowed, max 12 chars\n");
+    exit(1);
+}
 
   struct addrinfo hints, *res;
   memset(&hints, 0, sizeof(hints));
@@ -137,11 +158,16 @@ int main(int argc, char *argv[]){
       if (fgets(buffer, sizeof(buffer), stdin) != NULL) 
       {
         buffer[strcspn(buffer, "\n")] = 0;
-        char msg[BUF_SIZE];
-        snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
-        send(sockfd, msg, strlen(msg), 0);
-        printf("> ");
-        fflush(stdout);
+        if (strlen(buffer) > 255) {
+          fprintf(stderr, "ERROR: message too long (max 255 characters)\n");
+        } else 
+        {
+          char msg[BUF_SIZE];
+          snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
+          send(sockfd, msg, strlen(msg), 0);
+          printf("> ");
+          fflush(stdout);
+        }
       }
     }
   }
