@@ -128,7 +128,7 @@ int main(int argc, char *argv[]){
   }
   buffer[bytes] = '\0';
 
-  if (strncmp(buffer, "OK", 3) != 0) {
+  if (strncmp(buffer, "OK\n", 3) != 0) {
     fprintf(stderr, "ERROR: expected OK from server, got: %s\n", buffer);
     close(sockfd);
     exit(1);
