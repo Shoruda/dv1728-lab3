@@ -149,7 +149,14 @@ int main(int argc, char *argv[]){
         printf("\nServer disconnected.\n");
         break;
       }
-      printf("\r%s\n> ", buffer);
+      buffer[bytes] = '\0';
+      buffer[strcspn(buffer, "\n")] = '\0';
+
+      if (strncmp(buffer, "MSG ", 4) == 0) {
+        printf("\r%s\n> ", buffer + 4);
+      } else {
+        printf("\r%s\n> ", buffer);
+      }
       fflush(stdout);
     }
 
