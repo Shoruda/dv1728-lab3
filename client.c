@@ -110,9 +110,8 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
-  printf("Handshake OK: %s\n", buffer);
+  printf("Handshake OK: %s", buffer);
   snprintf(buffer, sizeof(buffer), "NICK %s\n", nickname);
-  send(sockfd, buffer, strlen(buffer), 0);
   if (send(sockfd, buffer, strlen(buffer), 0) < 0) 
   {
     fprintf(stderr, "ERROR: send failed: %s\n", strerror(errno));
