@@ -60,6 +60,24 @@ int find_free_slot()
   return -1;
 }
 
+int valid_nick(const char *nick) 
+{
+  size_t len = strlen(nick);
+  if (len == 0 || len > 12) return 0;
+  
+  for (size_t i = 0; i < len; i++) 
+  {
+    char c = nick[i];
+    if (!((c >= 'A' && c <= 'Z') ||
+          (c >= 'a' && c <= 'z') ||
+          (c >= '0' && c <= '9') ||
+          c == '_' || c == ')')) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int main(int argc, char *argv[]) 
 {
 
@@ -205,16 +223,27 @@ int main(int argc, char *argv[])
           {
             if (strncmp(buf, "NICK ", 5) == 0) 
             {
-              sscanf(buf + 5, "%31s", clients[i].nick);
-              send(sock, "OK\n", 3, 0);
-              printf("Client %s connected (socket %d)\n", clients[i].nick, sock);
+              char newnick[32];
+              sscanf(buf + 5, "%31s", newnick);
+
+              if (!valid_nick(newnick)) {
+                send(sock, "ERROR invalid nickname\n", 23, 0);
+                FD_CLR(sock, &master_set);
+                remove_client(i);
+              } 
+              else 
+              {
+                strcpy(clients[i].nick, newnick);
+                send(sock, "OK\n", 3, 0);
+                printf("Client %s connected (socket %d)\n", clients[i].nick, sock);
+              }
             } 
             else 
             {
               FD_CLR(sock, &master_set);
               remove_client(i);
             }
-          } 
+          }
           else 
           {
             if (strncmp(buf, "MSG ", 4) == 0) 
