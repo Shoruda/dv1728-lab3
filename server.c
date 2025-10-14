@@ -32,7 +32,6 @@ void remove_client(int idx)
   if (idx >= 0 && idx < MAX_CLIENTS && clients[idx].active) 
   {
     printf("%s disconnected\n", clients[idx].nick);
-    fflush(stdout);
     close(clients[idx].sock);
     clients[idx].active = 0;
     clients[idx].sock = -1;
@@ -138,7 +137,6 @@ int main(int argc, char *argv[])
   }
 
   printf("Server listening on %s:%s\n", host, port);
-  fflush(stdout);
 
   fd_set master_set, read_set;
   FD_ZERO(&master_set);
@@ -190,7 +188,6 @@ int main(int argc, char *argv[])
           if (newsock > max_fd) max_fd = newsock;
           
           printf("New connection on socket %d\n", newsock);
-          fflush(stdout);
         }
       }
     }
@@ -228,9 +225,9 @@ int main(int argc, char *argv[])
               sscanf(buf + 5, "%31s", newnick);
 
               if (!valid_nick(newnick)) {
-                send(sock, "ERR invalid nickname\n", 23, 0);
+                send(sock, "ERR invalid nickname\n", 21, 0);
                 FD_CLR(sock, &master_set);
-                remove_client(i);
+                remove_client(i); 
                 continue;
               } 
               else 
@@ -238,12 +235,13 @@ int main(int argc, char *argv[])
                 strcpy(clients[i].nick, newnick);
                 send(sock, "OK\n", 3, 0);
                 printf("Client %s connected (socket %d)\n", clients[i].nick, sock);
-                fflush(stdout);
               }
             } 
             else 
             {
-              send(sock, "ERR invalid protocol\n", 23, 0);
+              send(sock, "ERR invalid protocol\n", 21, 0);
+              FD_CLR(sock, &master_set);
+              remove_client(i);
               continue;
             }
           }
@@ -262,7 +260,10 @@ int main(int argc, char *argv[])
                   send(clients[j].sock, buf2, strlen(buf2), 0);
                 }
               }
-              fflush(stdout);
+            }
+            else
+            {
+              send(clients[i].sock, "ERROR invalid protocol\n", 23, 0);
             }
           }
         }
