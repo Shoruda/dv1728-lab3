@@ -147,6 +147,15 @@ int main(int argc, char *argv[])
 
   while (1) 
   {
+    max_fd = sockfd;
+    for (int i = 0; i < MAX_CLIENTS; i++) 
+    {
+      if (clients[i].active && clients[i].sock > max_fd) 
+      {
+        max_fd = clients[i].sock;
+      }
+    }
+
     read_set = master_set;
     
     if (select(max_fd + 1, &read_set, NULL, NULL, NULL) < 0) 
