@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
               sscanf(buf + 5, "%31s", newnick);
 
               if (!valid_nick(newnick)) {
-                send(sock, "ERROR invalid nickname\n", 23, 0);
+                send(sock, "ERR invalid nickname\n", 23, 0);
                 FD_CLR(sock, &master_set);
                 remove_client(i);
                 continue;
@@ -234,8 +234,7 @@ int main(int argc, char *argv[])
             } 
             else 
             {
-              FD_CLR(sock, &master_set);
-              remove_client(i);
+              send(sock, "ERR invalid protocol\n", 23, 0);
               continue;
             }
           }
@@ -249,18 +248,12 @@ int main(int argc, char *argv[])
               snprintf(buf, sizeof(buf), "MSG %s %s\n", clients[i].nick, msg);
               for (int j = 0; j < MAX_CLIENTS; j++) 
               {
-                if (clients[j].active && clients[j].sock != sock) {
-                  ssize_t sent = send(clients[j].sock, buf, strlen(buf), MSG_DONTWAIT);
-                  if (sent < 0) {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                      printf("Buffer full for %s, skipping\n", clients[j].nick);
-                    } else {
-                      FD_CLR(clients[j].sock, &master_set);
-                      remove_client(j);
-                    }
-                  }
+                if (clients[j].active) 
+                {
+                  send(clients[j].sock, buf, strlen(buf), 0);
                 }
               }
+              fflush(stdout);
             }
           }
         }
