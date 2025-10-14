@@ -69,7 +69,7 @@ int valid_nick(const char *nick)
 int main(int argc, char *argv[]) 
 {
 
-  /* Do magic */
+  /* Do magic :3 */
 
   if (argc != 2) 
   {
