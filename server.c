@@ -222,6 +222,7 @@ int main(int argc, char *argv[])
                 send(sock, "ERROR invalid nickname\n", 23, 0);
                 FD_CLR(sock, &master_set);
                 remove_client(i);
+                continue;
               } 
               else 
               {
@@ -235,6 +236,7 @@ int main(int argc, char *argv[])
             {
               FD_CLR(sock, &master_set);
               remove_client(i);
+              continue;
             }
           }
           else 
@@ -245,11 +247,11 @@ int main(int argc, char *argv[])
               printf("%s: %s\n", clients[i].nick, msg);
               char buf[BUF_SIZE];
               snprintf(buf, sizeof(buf), "MSG %s %s\n", clients[i].nick, msg);
-              for (int i = 0; i < MAX_CLIENTS; i++) 
+              for (int j = 0; j < MAX_CLIENTS; j++) 
               {
-                if (clients[i].active) 
+                if (clients[j].active) 
                 {
-                  send(clients[i].sock, buf, strlen(buf), 0);
+                  send(clients[j].sock, buf, strlen(buf), 0);
                 }
               }
               fflush(stdout);
