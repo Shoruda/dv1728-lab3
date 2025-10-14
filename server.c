@@ -27,18 +27,6 @@ typedef struct
 
 Client clients[MAX_CLIENTS];
 
-void broadcast_msg(int sender_sock, const char *sender_nick, const char *text) {
-  char buf[BUF_SIZE];
-  snprintf(buf, sizeof(buf), "MSG %s %s\n", sender_nick, text);
-  for (int i = 0; i < MAX_CLIENTS; i++) 
-  {
-    if (clients[i].active) 
-    {
-      send(clients[i].sock, buf, strlen(buf), 0);
-    }
-  }
-}
-
 void remove_client(int idx) 
 {
   if (idx >= 0 && idx < MAX_CLIENTS && clients[idx].active) 
@@ -212,6 +200,7 @@ int main(int argc, char *argv[])
         {
           FD_CLR(sock, &master_set);
           remove_client(i);
+          continue;
         } 
         else 
         {
@@ -254,7 +243,15 @@ int main(int argc, char *argv[])
             {
               char *msg = buf + 4;
               printf("%s: %s\n", clients[i].nick, msg);
-              broadcast_msg(sock, clients[i].nick, msg);
+              char buf[BUF_SIZE];
+              snprintf(buf, sizeof(buf), "MSG %s %s\n", clients[i].nick, msg);
+              for (int i = 0; i < MAX_CLIENTS; i++) 
+              {
+                if (clients[i].active) 
+                {
+                  send(clients[i].sock, buf, strlen(buf), 0);
+                }
+              }
               fflush(stdout);
             }
           }
