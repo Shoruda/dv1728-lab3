@@ -253,13 +253,13 @@ int main(int argc, char *argv[])
             {
               char *msg = buf + 4;
               printf("%s: %s\n", clients[i].nick, msg);
-              char buf[BUF_SIZE];
-              snprintf(buf, sizeof(buf), "MSG %s %s\n", clients[i].nick, msg);
+              char buf2[BUF_SIZE];
+              snprintf(buf2, sizeof(buf2), "MSG %s %s\n", clients[i].nick, msg);
               for (int j = 0; j < MAX_CLIENTS; j++) 
               {
                 if (clients[j].active) 
                 {
-                  send(clients[j].sock, buf, strlen(buf), 0);
+                  send(clients[j].sock, buf2, strlen(buf2), 0);
                 }
               }
               fflush(stdout);
