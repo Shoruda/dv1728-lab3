@@ -30,7 +30,6 @@ Client clients[MAX_CLIENTS];
 void broadcast_msg(int sender_sock, const char *sender_nick, const char *text) {
   char buf[BUF_SIZE];
   snprintf(buf, sizeof(buf), "MSG %s %s\n", sender_nick, text);
-    
   for (int i = 0; i < MAX_CLIENTS; i++) 
   {
     if (clients[i].active) 
@@ -45,6 +44,7 @@ void remove_client(int idx)
   if (idx >= 0 && idx < MAX_CLIENTS && clients[idx].active) 
   {
     printf("%s disconnected\n", clients[idx].nick);
+    fflush(stdout);
     close(clients[idx].sock);
     clients[idx].active = 0;
     clients[idx].sock = -1;
@@ -107,9 +107,10 @@ int main(int argc, char *argv[])
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
-  if (getaddrinfo(host, port, &hints, &res) != 0) 
+  int status = getaddrinfo(host, port, &hints, &res);
+  if (status != 0) 
   {
-    perror("getaddrinfo");
+    fprintf(stderr, "ERROR: getaddrinfo failed: %s\n", gai_strerror(status));
     exit(1);
   }
 
@@ -138,7 +139,7 @@ int main(int argc, char *argv[])
 
   if (listen(sockfd, BACKLOG) < 0) 
   {
-    perror("listen");
+    fprintf(stderr, "listen failed\n");
     exit(1);
   }
 
@@ -149,6 +150,7 @@ int main(int argc, char *argv[])
   }
 
   printf("Server listening on %s:%s\n", host, port);
+  fflush(stdout);
 
   fd_set master_set, read_set;
   FD_ZERO(&master_set);
@@ -191,6 +193,7 @@ int main(int argc, char *argv[])
           if (newsock > max_fd) max_fd = newsock;
           
           printf("New connection on socket %d\n", newsock);
+          fflush(stdout);
         }
       }
     }
@@ -236,6 +239,7 @@ int main(int argc, char *argv[])
                 strcpy(clients[i].nick, newnick);
                 send(sock, "OK\n", 3, 0);
                 printf("Client %s connected (socket %d)\n", clients[i].nick, sock);
+                fflush(stdout);
               }
             } 
             else 
@@ -251,6 +255,7 @@ int main(int argc, char *argv[])
               char *msg = buf + 4;
               printf("%s: %s\n", clients[i].nick, msg);
               broadcast_msg(sock, clients[i].nick, msg);
+              fflush(stdout);
             }
           }
         }
