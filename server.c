@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
                 }
               }
             }
-            else if (strncmp(buf, "STATUS ", 7) == 0)
+            else if (strncmp(buf, "Status ", 7) == 0)
             {
               time_t current_time = time(NULL);
               long uptime = (long)(current_time - server_start_time);
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
               send(sock, status_msg, strlen(status_msg), 0);
               printf("Status request from %s\n", clients[i].nick);
             }
-            else if (strncmp(buf, "CLIENTS ", 8) == 0)
+            else if (strncmp(buf, "Client ", 8) == 0)
             {
               char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
