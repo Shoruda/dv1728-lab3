@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(buf, "Clients") == 0)
             {
-              char clients_msg[BUF_SIZE * 10] = "CPCLIENTS:\n";
+              char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
               
               for (int j = 0; j < MAX_CLIENTS; j++)
@@ -330,6 +330,7 @@ int main(int argc, char *argv[])
                   snprintf(line, sizeof(line), "%d:%s:%s:%d:%ld\n",
                   j, clients[j].nick[0] ? clients[j].nick : "(none)", 
                   clients[j].ip, clients[j].port, conn_time);
+                  strncat(clients_msg, line, sizeof(clients_msg) - strlen(clients_msg) - 1);
                 }
               }
               strncat(clients_msg, "\n", sizeof(clients_msg) - strlen(clients_msg) - 1);
