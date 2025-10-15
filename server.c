@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
                 }
               }
             }
-            else if (strncmp(buf, "Status ", 7) == 0)
+            else if (strncmp(buf, "Status\n", 7) == 0)
             {
               time_t current_time = time(NULL);
               long uptime = (long)(current_time - server_start_time);
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
               send(sock, status_msg, strlen(status_msg), 0);
               printf("Status request from %s\n", clients[i].nick);
             }
-            else if (strncmp(buf, "Client ", 8) == 0)
+            else if (strncmp(buf, "Client\n", 8) == 0)
             {
               char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
@@ -328,6 +328,54 @@ int main(int argc, char *argv[])
               strncat(clients_msg, "\n", sizeof(clients_msg) - strlen(clients_msg) - 1);
               send(sock, clients_msg, strlen(clients_msg), 0);
               printf("Clients list request from %s\n", clients[i].nick);
+            }
+            else if (strncmp(buf, "KICK ", 5) == 0)
+            {
+              const char *secret = "mfo:.ai?fqajdalf832!";
+              char given_nick[32];
+              char given_secret[256];
+              
+              if (sscanf(buf + 5, "%31s %255s", given_nick, given_secret) == 2)
+              {
+                if (strcmp(given_secret, secret) == 0)
+                {
+                  int found = -1;
+                  for (int j = 0; j < MAX_CLIENTS; j++)
+                  {
+                    if (clients[j].active && strcmp(clients[j].nick, "pending") != 0 &&
+                        strcmp(clients[j].nick, given_nick) == 0)
+                    {
+                      found = j;
+                      break;
+                    }
+                  }
+                  
+                  if (found >= 0)
+                  {
+                    char kick_msg[BUF_SIZE];
+                    snprintf(kick_msg, sizeof(kick_msg), "KICKED by %s\n", clients[i].nick);
+                    send(clients[found].sock, kick_msg, strlen(kick_msg), 0);
+                    
+                    FD_CLR(clients[found].sock, &master_set);
+                    remove_client(found);
+                    
+                    char response[BUF_SIZE];
+                    snprintf(response, sizeof(response), "CPKICK: %s removed\n\n", given_nick);
+                    send(sock, response, strlen(response), 0);
+                    printf("%s kicked %s\n", clients[i].nick, given_nick);
+                  }
+                  else
+                  {
+                    char response[BUF_SIZE];
+                    snprintf(response, sizeof(response), "CPKICK: %s not found\n\n", given_nick);
+                    send(sock, response, strlen(response), 0);
+                  }
+                }
+                else
+                {
+                  send(sock, "CPKICK: Wrong secret\n\n", 22, 0);
+                }
+              }
             }
             else
             {
