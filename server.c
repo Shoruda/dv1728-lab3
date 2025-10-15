@@ -237,11 +237,6 @@ int main(int argc, char *argv[])
         else 
         {
           buf[n] = '\0';
-          size_t len = strlen(buf);
-          while (len > 0 && (buf[len-1] == '\n' || buf[len-1] == '\r')) 
-          {
-            buf[--len] = '\0';
-          }
           
           if (strcmp(clients[i].nick, "pending") == 0) 
           {
