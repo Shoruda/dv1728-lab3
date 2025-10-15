@@ -309,26 +309,6 @@ int main(int argc, char *argv[])
               send(sock, status_msg, strlen(status_msg), 0);
               printf("Status request from %s\n", clients[i].nick);
             }
-            else if (strcmp(buf, "Clients") == 0)
-            {
-              char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
-              time_t current_time = time(NULL);
-              
-              for (int j = 0; j < MAX_CLIENTS; j++)
-              {
-                if (clients[j].active && strcmp(clients[j].nick, "pending") != 0)
-                {
-                  long conn_time = (long)(current_time - clients[j].connect_time);
-                  char line[256];
-                  snprintf(line, sizeof(line), "%d %s %s:%s %ld\n",
-                  j, clients[j].nick[0] ? clients[j].nick : "(none)", clients[j].ip, clients[j].port, conn_time);
-                  strncat(clients_msg, line, sizeof(clients_msg) - strlen(clients_msg) - 1);
-                }
-              }
-              strncat(clients_msg, "\n", sizeof(clients_msg) - strlen(clients_msg) - 1);
-              send(sock, clients_msg, strlen(clients_msg), 0);
-              printf("Clients list request from %s\n", clients[i].nick);
-            }
             else
             {
               char debug_msg[BUF_SIZE];
