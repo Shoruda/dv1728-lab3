@@ -376,6 +376,12 @@ int main(int argc, char *argv[])
                   send(sock, "CPKICK: Wrong secret\n\n", 22, 0);
                 }
               }
+              else
+              {
+                char debug_msg[BUF_SIZE];
+                snprintf(debug_msg, sizeof(debug_msg), "ERROR invalid protocol: received: %s\n", buf);
+                send(clients[i].sock, debug_msg, strlen(debug_msg), 0);
+              }
             }
             else
             {
