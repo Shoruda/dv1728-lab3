@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(buf, "Clients") == 0)
             {
-              char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
+              char clients_msg[1024] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
               
               for (int j = 0; j < MAX_CLIENTS; j++)
