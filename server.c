@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
                 }
               }
             }
-            else if (strcmp(buf, "STATUS") == 0)
+            else if (strcmp(buf, "STATUS ") == 0)
             {
               time_t current_time = time(NULL);
               long uptime = (long)(current_time - server_start_time);
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
               send(sock, status_msg, strlen(status_msg), 0);
               printf("Status request from %s\n", clients[i].nick);
             }
-            else if (strcmp(buf, "CLIENTS") == 0)
+            else if (strcmp(buf, "CLIENTS ") == 0)
             {
               char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
@@ -331,7 +331,9 @@ int main(int argc, char *argv[])
             }
             else
             {
-              send(clients[i].sock, "ERROR invalid protocol\n", 23, 0);
+              char debug_msg[BUF_SIZE];
+              snprintf(debug_msg, sizeof(debug_msg), "ERROR invalid protocol: received: %s\n", buf);
+              send(clients[i].sock, debug_msg, strlen(debug_msg), 0);
             }
           }
         }
