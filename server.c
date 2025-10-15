@@ -26,7 +26,7 @@ typedef struct
   int active;
   time_t connect_time;
   char ip[INET6_ADDRSTRLEN];
-  char port[16];
+  int port;
 } Client;
 
 Client clients[MAX_CLIENTS];
@@ -201,13 +201,13 @@ int main(int argc, char *argv[])
           {
             struct sockaddr_in *s = (struct sockaddr_in *)&cli_addr;
             inet_ntop(AF_INET, &s->sin_addr, clients[slot].ip, sizeof(clients[slot].ip));
-            snprintf(clients[slot].port, sizeof(clients[slot].port), "%d", ntohs(s->sin_port));
+            clients[slot].port = ntohs(s->sin_port);
           } 
           else 
           {
             struct sockaddr_in6 *s = (struct sockaddr_in6 *)&cli_addr;
             inet_ntop(AF_INET6, &s->sin6_addr, clients[slot].ip, sizeof(clients[slot].ip));
-            snprintf(clients[slot].port, sizeof(clients[slot].port), "%d", ntohs(s->sin6_port));
+            clients[slot].port = ntohs(s->sin6_port);
           }
 
           FD_SET(newsock, &master_set);
@@ -286,6 +286,28 @@ int main(int argc, char *argv[])
                   send(clients[j].sock, buf2, strlen(buf2), 0);
                 }
               }
+            }
+            else if (strcmp(buf, "Status") == 0)
+            {
+              time_t current_time = time(NULL);
+              long uptime = (long)(current_time - server_start_time);
+
+              int active_clients = 0;
+              for (int j = 0; j < MAX_CLIENTS; j++) 
+              {
+                if (clients[j].active && strcmp(clients[j].nick, "pending") != 0) 
+                {
+                  active_clients++;
+                }
+              }
+              
+              char status_msg[BUF_SIZE];
+              snprintf(status_msg, sizeof(status_msg), 
+              "CPSTATUS\nListenAddress: %s:%s\nClients %d\nUpTime %ld\n\n", 
+              server_host, server_port, active_clients, uptime);
+
+              send(sock, status_msg, strlen(status_msg), 0);
+              printf("Status request from %s\n", clients[i].nick);
             }
             else if (strcmp(buf, "Clients") == 0)
             {
