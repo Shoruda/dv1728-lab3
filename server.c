@@ -157,12 +157,19 @@ int main(int argc, char *argv[])
 
   while (1) 
   {
+    FD_ZERO(&master_set);
+    FD_SET(sockfd, &master_set);
     max_fd = sockfd;
+    
     for (int i = 0; i < MAX_CLIENTS; i++) 
     {
-      if (clients[i].active && clients[i].sock > max_fd) 
+      if (clients[i].active) 
       {
-        max_fd = clients[i].sock;
+        FD_SET(clients[i].sock, &master_set);
+        if (clients[i].sock > max_fd) 
+        {
+          max_fd = clients[i].sock;
+        }
       }
     }
 
@@ -320,9 +327,9 @@ int main(int argc, char *argv[])
                 {
                   long conn_time = (long)(current_time - clients[j].connect_time);
                   char line[256];
-                  snprintf(line, sizeof(line), "%d %s %s:%d %ld\n",
-                  j, clients[j].nick[0] ? clients[j].nick : "(none)", clients[j].ip, clients[j].port, conn_time);
-                  strncat(clients_msg, line, sizeof(clients_msg) - strlen(clients_msg) - 1);
+                  snprintf(line, sizeof(line), "%d:%s:%s:%d:%ld\n",
+                  j, clients[j].nick[0] ? clients[j].nick : "(none)", 
+                  clients[j].ip, clients[j].port, conn_time);
                 }
               }
               strncat(clients_msg, "\n", sizeof(clients_msg) - strlen(clients_msg) - 1);
