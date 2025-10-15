@@ -13,6 +13,7 @@
 #include <sys/select.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #define BACKLOG 10
 #define MAX_CLIENTS 100
@@ -23,9 +24,16 @@ typedef struct
   int sock;
   char nick[32];
   int active;
+  time_t connect_time;
+  char ip[INET6_ADDRSTRLEN];
+  char port[16];
 } Client;
 
 Client clients[MAX_CLIENTS];
+
+time_t server_start_time;
+char server_host[256];
+char server_port[32];
 
 void remove_client(int idx) 
 {
@@ -83,10 +91,10 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  char host[256];
-  strncpy(host, argv[1], sep - argv[1]);
-  host[sep - argv[1]] = '\0';
-  char *port = sep + 1;
+  strncpy(server_host, argv[1], sep - argv[1]);
+  server_host[sep - argv[1]] = '\0';
+  strncpy(server_port, sep + 1, sizeof(server_port) - 1);
+  server_port[sizeof(server_port) - 1] = '\0';
 
   struct addrinfo hints, *res;
   memset(&hints, 0, sizeof(hints));
@@ -94,7 +102,7 @@ int main(int argc, char *argv[])
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
 
-  int status = getaddrinfo(host, port, &hints, &res);
+  int status = getaddrinfo(server_host, server_port, &hints, &res);
   if (status != 0) 
   {
     fprintf(stderr, "ERROR: getaddrinfo failed: %s\n", gai_strerror(status));
@@ -134,9 +142,13 @@ int main(int argc, char *argv[])
   {
     clients[i].active = 0;
     clients[i].sock = -1;
+    clients[i].connect_time = 0;
+    memset(clients[i].ip, 0, sizeof(clients[i].ip));
+    memset(clients[i].port, 0, sizeof(clients[i].port));
   }
 
-  printf("Server listening on %s:%s\n", host, port);
+  server_start_time = time(NULL);
+  printf("Server listening on %s:%s\n", server_host, server_port);
 
   fd_set master_set, read_set;
   FD_ZERO(&master_set);
@@ -182,8 +194,22 @@ int main(int argc, char *argv[])
           
           clients[slot].sock = newsock;
           clients[slot].active = 1;
+          clients[slot].connect_time = time(NULL);
           strcpy(clients[slot].nick, "pending");
           
+          if (cli_addr.ss_family == AF_INET) 
+          {
+            struct sockaddr_in *s = (struct sockaddr_in *)&cli_addr;
+            inet_ntop(AF_INET, &s->sin_addr, clients[slot].ip, sizeof(clients[slot].ip));
+            snprintf(clients[slot].port, sizeof(clients[slot].port), "%d", ntohs(s->sin_port));
+          } 
+          else 
+          {
+            struct sockaddr_in6 *s = (struct sockaddr_in6 *)&cli_addr;
+            inet_ntop(AF_INET6, &s->sin6_addr, clients[slot].ip, sizeof(clients[slot].ip));
+            snprintf(clients[slot].port, sizeof(clients[slot].port), "%d", ntohs(s->sin6_port));
+          }
+
           FD_SET(newsock, &master_set);
           if (newsock > max_fd) max_fd = newsock;
           
@@ -261,6 +287,48 @@ int main(int argc, char *argv[])
                 }
               }
             }
+            else if (strcmp(buf, "STATUS") == 0)
+            {
+              time_t current_time = time(NULL);
+              long uptime = (long)(current_time - server_start_time);
+
+              int active_clients = 0;
+              for (int i = 0; i < MAX_CLIENTS; i++) 
+              {
+                if (clients[i].active && strcmp(clients[i].nick, "pending") != 0) 
+                {
+                  active_clients++;
+                }
+              }
+              
+              char status_msg[BUF_SIZE];
+              snprintf(status_msg, sizeof(status_msg), 
+              "CPSTATUS:\nListenAddress: %s:%s\nClients: %d\nUpTime: %ld\n\n", 
+              server_host, server_port, active_clients, uptime);
+
+              send(sock, status_msg, strlen(status_msg), 0);
+              printf("Status request from %s\n", clients[i].nick);
+            }
+            else if (strcmp(buf, "CLIENTS") == 0)
+            {
+              char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
+              time_t current_time = time(NULL);
+              
+              for (int j = 0; j < MAX_CLIENTS; j++)
+              {
+                if (clients[j].active && strcmp(clients[j].nick, "pending") != 0)
+                {
+                  long conn_time = (long)(current_time - clients[j].connect_time);
+                  char line[256];
+                  snprintf(line, sizeof(line), "%d:%s:%s:%s:%ld\n",
+                  j, clients[j].nick, clients[j].ip, clients[j].port, conn_time);
+                  strncat(clients_msg, line, sizeof(clients_msg) - strlen(clients_msg) - 1);
+                }
+              }
+              strncat(clients_msg, "\n", sizeof(clients_msg) - strlen(clients_msg) - 1);
+              send(sock, clients_msg, strlen(clients_msg), 0);
+              printf("Clients list request from %s\n", clients[i].nick);
+            }
             else
             {
               send(clients[i].sock, "ERROR invalid protocol\n", 23, 0);
@@ -273,4 +341,4 @@ int main(int argc, char *argv[])
 
   close(sockfd);
   return 0;
-}       
+}
