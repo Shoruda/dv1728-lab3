@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
                 {
                   long conn_time = (long)(current_time - clients[j].connect_time);
                   char line[256];
-                  snprintf(line, sizeof(line), "%d %s %s:%s %ld\n",
+                  snprintf(line, sizeof(line), "%d:%s:%s:%s:%ld\n",
                   j, clients[j].nick, clients[j].ip, clients[j].port, conn_time);
                   strncat(clients_msg, line, sizeof(clients_msg) - strlen(clients_msg) - 1);
                 }
