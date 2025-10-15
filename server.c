@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
               
               char status_msg[BUF_SIZE];
               snprintf(status_msg, sizeof(status_msg), 
-              "CPSTATUS:\nListenAddress: %s:%s\nClients: %d\nUpTime: %ld\n\n", 
+              "CPSTATUS\nListenAddress: %s:%s\nClients %d\nUpTime %ld\n\n", 
               server_host, server_port, active_clients, uptime);
 
               send(sock, status_msg, strlen(status_msg), 0);
