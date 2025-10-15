@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     clients[i].sock = -1;
     clients[i].connect_time = 0;
     memset(clients[i].ip, 0, sizeof(clients[i].ip));
-    memset(clients[i].port, 0, sizeof(clients[i].port));
+    clients[i].port = 0;
   }
 
   server_start_time = time(NULL);
