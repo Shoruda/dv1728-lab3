@@ -237,6 +237,11 @@ int main(int argc, char *argv[])
         else 
         {
           buf[n] = '\0';
+          size_t len = strlen(buf);
+          while (len > 0 && (buf[len-1] == '\n' || buf[len-1] == '\r')) 
+          {
+            buf[--len] = '\0';
+          }
           
           if (strcmp(clients[i].nick, "pending") == 0) 
           {
@@ -281,28 +286,6 @@ int main(int argc, char *argv[])
                   send(clients[j].sock, buf2, strlen(buf2), 0);
                 }
               }
-            }
-            else if (strcmp(buf, "Status") == 0)
-            {
-              time_t current_time = time(NULL);
-              long uptime = (long)(current_time - server_start_time);
-
-              int active_clients = 0;
-              for (int j = 0; j < MAX_CLIENTS; j++) 
-              {
-                if (clients[j].active && strcmp(clients[j].nick, "pending") != 0) 
-                {
-                  active_clients++;
-                }
-              }
-              
-              char status_msg[BUF_SIZE];
-              snprintf(status_msg, sizeof(status_msg), 
-              "CPSTATUS\nListenAddress: %s:%s\nClients %d\nUpTime %ld\n\n", 
-              server_host, server_port, active_clients, uptime);
-
-              send(sock, status_msg, strlen(status_msg), 0);
-              printf("Status request from %s\n", clients[i].nick);
             }
             else if (strcmp(buf, "Clients") == 0)
             {
