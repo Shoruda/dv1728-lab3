@@ -287,15 +287,15 @@ int main(int argc, char *argv[])
                 }
               }
             }
-            else if (strcmp(buf, "STATUS ") == 0)
+            else if (strncmp(buf, "STATUS ", 7) == 0)
             {
               time_t current_time = time(NULL);
               long uptime = (long)(current_time - server_start_time);
 
               int active_clients = 0;
-              for (int i = 0; i < MAX_CLIENTS; i++) 
+              for (int j = 0; j < MAX_CLIENTS; j++) 
               {
-                if (clients[i].active && strcmp(clients[i].nick, "pending") != 0) 
+                if (clients[j].active && strcmp(clients[j].nick, "pending") != 0) 
                 {
                   active_clients++;
                 }
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
               send(sock, status_msg, strlen(status_msg), 0);
               printf("Status request from %s\n", clients[i].nick);
             }
-            else if (strcmp(buf, "CLIENTS ") == 0)
+            else if (strncmp(buf, "CLIENTS ", 8) == 0)
             {
               char clients_msg[BUF_SIZE * 4] = "CPCLIENTS:\n";
               time_t current_time = time(NULL);
