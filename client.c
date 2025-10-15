@@ -19,16 +19,18 @@
 
 struct termios t;
 
-int valid_nick(const char *nick) {
+int valid_nick(const char *nick) 
+{
   size_t len = strlen(nick);
   if (len == 0 || len > 12) return 0;
 
-  for (size_t i = 0; i < len; i++) {
+  for (size_t i = 0; i < len; i++) 
+  {
     char c = nick[i];
     if (!((c >= 'A' && c <= 'Z') ||
-        (c >= 'a' && c <= 'z') ||
-        (c >= '0' && c <= '9') ||
-        c == '_' || c == ')')) {
+          (c >= 'a' && c <= 'z') ||
+          (c >= '0' && c <= '9') ||
+          c == '_' || c == ')')) {
       return 0;
     }
   }
@@ -178,7 +180,7 @@ int main(int argc, char *argv[]){
           printf("%s\n", line + 4);
         } else if (strlen(line) > 0) {
           printf("%s\n", line);
-        }    
+        }     
         line = next_line + 1;
       }
       fflush(stdout);
@@ -194,7 +196,7 @@ int main(int argc, char *argv[]){
         } else 
         {
           char msg[BUF_SIZE];
-          snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
+          snprintf(msg, sizeof(msg), "MSG %s: %s\n", nickname, buffer);
           send(sockfd, msg, strlen(msg), 0);
           fflush(stdout);
         }
