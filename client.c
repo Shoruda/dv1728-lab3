@@ -146,6 +146,11 @@ int main(int argc, char *argv[]){
   printf("You can now type messages. Press Ctrl+C to exit.\n");
   fflush(stdout);
 
+  char recv_buf[BUF_SIZE];
+  size_t recv_len = 0;
+  char input_buf[255 + 1];
+  size_t input_len = 0;
+
   fd_set readfds;
   while (1) 
   {
@@ -163,25 +168,43 @@ int main(int argc, char *argv[]){
 
     if (FD_ISSET(sockfd, &readfds)) 
     {
-      memset(buffer, 0, sizeof(buffer));
       int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
       if (bytes <= 0) {
         printf("\nServer disconnected.\n");
         break;
       }
-      buffer[bytes] = '\0';
-      char *line = buffer;
-      char *next_line;
+
+      if (recv_len + bytes >= sizeof(recv_buf)) {
+        fprintf(stderr, "\nERROR: receive buffer overflow\n");
+        break;
+      }
       
-      while ((next_line = strchr(line, '\n')) != NULL) {
-        *next_line = '\0';
+      memcpy(recv_buf + recv_len, buffer, bytes);
+      recv_len += bytes;
+      recv_buf[recv_len] = '\0';
+
+      char *line_start = recv_buf;
+      char *newline;
+      
+      while ((newline = strchr(line_start, '\n')) != NULL) {
+        *newline = '\0';
         
-        if (strncmp(line, "MSG ", 4) == 0) {
-          printf("%s\n", line + 4);
-        } else if (strlen(line) > 0) {
-          printf("%s\n", line);
-        }     
-        line = next_line + 1;
+        if (strncmp(line_start, "MSG ", 4) == 0) {
+          printf("\r%s\n", line_start + 4);
+        } else if (strlen(line_start) > 0) {
+          printf("\r%s\n", line_start);
+        }
+        line_start = newline + 1;
+      }
+
+      recv_len = strlen(line_start);
+      if (recv_len > 0) {
+        memmove(recv_buf, line_start, recv_len);
+      }
+      recv_buf[recv_len] = '\0';
+      
+      if (input_len > 0) {
+        printf("> %.*s", (int)input_len, input_buf);
       }
       fflush(stdout);
     }
