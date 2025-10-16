@@ -44,6 +44,7 @@ int main(int argc, char *argv[]){
   if (argc != 3)
   {
     fprintf(stderr, "Usage: %s <server_ip:port> <nickname>\n", argv[0]);
+    fflush(stderr);
     exit(1);
   }
 
@@ -52,6 +53,7 @@ int main(int argc, char *argv[]){
   if (!sep) 
   {
     fprintf(stderr, "Error: address must be in format IP:PORT\n");
+    fflush(stderr);
     exit(1);
   }
 
@@ -63,6 +65,7 @@ int main(int argc, char *argv[]){
   if (!valid_nick(nickname)) 
   {
     fprintf(stderr, "ERROR: invalid nickname. Only A-Z, a-z, 0-9, _, ) allowed, max 12 chars\n");
+    fflush(stderr);
     exit(1);
   }
 
@@ -75,6 +78,7 @@ int main(int argc, char *argv[]){
   if (status != 0) 
   {
     fprintf(stderr, "ERROR: getaddrinfo failed: %s\n", gai_strerror(status));
+    fflush(stderr);
     exit(1);
   }
 
@@ -82,6 +86,7 @@ int main(int argc, char *argv[]){
   if (sockfd < 0) 
   {
     fprintf(stderr, "ERROR: socket creation failed: %s\n", strerror(errno));
+    fflush(stderr);
     freeaddrinfo(res);
     exit(1);
   }
@@ -89,6 +94,7 @@ int main(int argc, char *argv[]){
   if (connect(sockfd, res->ai_addr, res->ai_addrlen) < 0) 
   {
     fprintf(stderr, "ERROR: connect failed: %s\n", strerror(errno));
+    fflush(stderr);
     freeaddrinfo(res);
     close(sockfd);
     exit(1);
@@ -101,6 +107,7 @@ int main(int argc, char *argv[]){
   int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
   if (bytes <= 0) {
     fprintf(stderr, "ERROR: server closed connection before handshake\n");
+    fflush(stderr);
     close(sockfd);
     exit(1);
   }
@@ -109,6 +116,7 @@ int main(int argc, char *argv[]){
   if (strncmp(buffer, "HELLO 1\n", 9) != 0) 
   {
     fprintf(stderr, "ERROR: unexpected handshake from server: %s\n", buffer);
+    fflush(stderr);
     close(sockfd);
     exit(1);
   }
@@ -119,6 +127,7 @@ int main(int argc, char *argv[]){
   if (send(sockfd, buffer, strlen(buffer), 0) < 0) 
   {
     fprintf(stderr, "ERROR: send failed: %s\n", strerror(errno));
+    fflush(stderr);
     close(sockfd);
     exit(1);
   }
@@ -126,6 +135,7 @@ int main(int argc, char *argv[]){
   bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
   if (bytes <= 0) {
     fprintf(stderr, "ERROR: server closed connection after NICK\n");
+    fflush(stderr);
     close(sockfd);
     exit(1);
   }
@@ -133,6 +143,7 @@ int main(int argc, char *argv[]){
 
   if (strncmp(buffer, "OK\n", 3) != 0) {
     fprintf(stderr, "ERROR: expected OK from server, got: %s\n", buffer);
+    fflush(stderr);
     close(sockfd);
     exit(1);
   }
@@ -163,6 +174,7 @@ int main(int argc, char *argv[]){
     if (activity < 0) 
     {
       fprintf(stderr, "ERROR: select failed: %s\n", strerror(errno));
+      fflush(stderr);
       break;
     }
 
@@ -176,6 +188,7 @@ int main(int argc, char *argv[]){
 
       if (recv_len + bytes >= sizeof(recv_buf)) {
         fprintf(stderr, "\nERROR: receive buffer overflow\n");
+        fflush(stderr);
         break;
       }
       
@@ -216,6 +229,7 @@ int main(int argc, char *argv[]){
         buffer[strcspn(buffer, "\n")] = 0;
         if (strlen(buffer) > 255) {
           fprintf(stderr, "ERROR: message too long (max 255 characters)\n");
+          fflush(stderr);
         } else 
         {
           char msg[BUF_SIZE];
