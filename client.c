@@ -233,7 +233,7 @@ int main(int argc, char *argv[]){
         } else 
         {
           char msg[BUF_SIZE];
-          snprintf(msg, sizeof(msg), "MSG %s: %s\n", nickname, buffer);
+          snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
           send(sockfd, msg, strlen(msg), 0);
           fflush(stdout);
         }
