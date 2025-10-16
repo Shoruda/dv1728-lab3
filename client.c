@@ -190,9 +190,9 @@ int main(int argc, char *argv[]){
         *newline = '\0';
         
         if (strncmp(line_start, "MSG ", 4) == 0) {
-          printf("\r%s\n", line_start + 4);
+          printf("%s\n", line_start + 4);
         } else if (strlen(line_start) > 0) {
-          printf("\r%s\n", line_start);
+          printf("%s\n", line_start);
         }
         line_start = newline + 1;
       }
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]){
             fprintf(stderr, "\nERROR: message too long (max 255 characters)\n");
           } else {
             char msg[BUF_SIZE];
-            snprintf(msg, sizeof(msg), "MSG %s: %s\n", nickname, input_buf);
+            snprintf(msg, sizeof(msg), "MSG %s\n", input_buf);
             send(sockfd, msg, strlen(msg), 0);
           }
           input_len = 0;
