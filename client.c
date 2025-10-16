@@ -214,19 +214,47 @@ int main(int argc, char *argv[]){
     }
 
     if (FD_ISSET(STDIN_FILENO, &readfds)) {
-      memset(buffer, 0, sizeof(buffer));
-      if (fgets(buffer, sizeof(buffer), stdin) != NULL) 
-      {
-        buffer[strcspn(buffer, "\n")] = 0;
-        if (strlen(buffer) > 255) {
-          fprintf(stderr, "ERROR: message too long (max 255 characters)\n");
-        } else 
-        {
-          char msg[BUF_SIZE];
-          snprintf(msg, sizeof(msg), "MSG %s\n", buffer);
-          send(sockfd, msg, strlen(msg), 0);
+      char ch;
+      ssize_t n = read(STDIN_FILENO, &ch, 1);
+      if (n <= 0) {
+        printf("\nStdin closed.\n");
+        break;
+      }
+      
+      if (ch == '\n' || ch == '\r') {
+        if (input_len > 0) {
+          if (input_len > 255) {
+            fprintf(stderr, "\nERROR: message too long (max 255 characters)\n");
+          } else {
+            char msg[BUF_SIZE];
+            snprintf(msg, sizeof(msg), "MSG %s: %s\n", nickname, input_buf);
+            send(sockfd, msg, strlen(msg), 0);
+          }
+          input_len = 0;
+          input_buf[0] = '\0';
+          printf("\n");
           fflush(stdout);
         }
+      } else if (ch == 3) {
+        printf("\n");
+        tcgetattr(STDIN_FILENO, &t);
+        t.c_lflag |= (ECHO | ICANON);
+        tcsetattr(STDIN_FILENO, TCSANOW, &t);
+
+        close(sockfd);
+        return 0;
+      } else if (ch == 127 || ch == 8) {
+        if (input_len > 0) {
+          input_len--;
+          input_buf[input_len] = '\0';
+          printf("\b \b");
+          fflush(stdout);
+        }
+      } else if (input_len < 255 && ch >= 32 && ch < 127) {
+        input_buf[input_len++] = ch;
+        input_buf[input_len] = '\0';
+        printf("%c", ch);
+        fflush(stdout);
       }
     }
   }
@@ -237,4 +265,4 @@ int main(int argc, char *argv[]){
 
   close(sockfd);
   return 0;
-}
+}  
