@@ -190,22 +190,18 @@ int main(int argc, char *argv[]){
         *newline = '\0';
         
         if (strncmp(line_start, "MSG ", 4) == 0) {
-          printf("%s\n", line_start + 4);
+          printf("\r%s\n", line_start + 4);
         } else if (strlen(line_start) > 0) {
-          printf("%s\n", line_start);
+          printf("\r%s\n", line_start);
         }
         line_start = newline + 1;
       }
 
-      size_t processed = line_start - recv_buf;
-      if (processed < recv_len) {
-        recv_len = recv_len - processed;
+      recv_len = strlen(line_start);
+      if (recv_len > 0) {
         memmove(recv_buf, line_start, recv_len);
-        recv_buf[recv_len] = '\0';
-      } else {
-        recv_len = 0;
-        recv_buf[0] = '\0';
       }
+      recv_buf[recv_len] = '\0';
       
       if (input_len > 0) {
         printf("> %.*s", (int)input_len, input_buf);
@@ -214,47 +210,19 @@ int main(int argc, char *argv[]){
     }
 
     if (FD_ISSET(STDIN_FILENO, &readfds)) {
-      char ch;
-      ssize_t n = read(STDIN_FILENO, &ch, 1);
-      if (n <= 0) {
-        printf("\nStdin closed.\n");
-        break;
-      }
-      
-      if (ch == '\n' || ch == '\r') {
-        if (input_len > 0) {
-          if (input_len > 255) {
-            fprintf(stderr, "\nERROR: message too long (max 255 characters)\n");
-          } else {
-            char msg[BUF_SIZE];
-            snprintf(msg, sizeof(msg), "MSG %s\n", input_buf);
-            send(sockfd, msg, strlen(msg), 0);
-          }
-          input_len = 0;
-          input_buf[0] = '\0';
-          printf("\n");
+      memset(buffer, 0, sizeof(buffer));
+      if (fgets(buffer, sizeof(buffer), stdin) != NULL) 
+      {
+        buffer[strcspn(buffer, "\n")] = 0;
+        if (strlen(buffer) > 255) {
+          fprintf(stderr, "ERROR: message too long (max 255 characters)\n");
+        } else 
+        {
+          char msg[BUF_SIZE];
+          snprintf(msg, sizeof(msg), "MSG %s: %s\n", nickname, buffer);
+          send(sockfd, msg, strlen(msg), 0);
           fflush(stdout);
         }
-      } else if (ch == 3) {
-        printf("\n");
-        tcgetattr(STDIN_FILENO, &t);
-        t.c_lflag |= (ECHO | ICANON);
-        tcsetattr(STDIN_FILENO, TCSANOW, &t);
-
-        close(sockfd);
-        return 0;
-      } else if (ch == 127 || ch == 8) {
-        if (input_len > 0) {
-          input_len--;
-          input_buf[input_len] = '\0';
-          printf("\b \b");
-          fflush(stdout);
-        }
-      } else if (input_len < 255 && ch >= 32 && ch < 127) {
-        input_buf[input_len++] = ch;
-        input_buf[input_len] = '\0';
-        printf("%c", ch);
-        fflush(stdout);
       }
     }
   }
@@ -265,4 +233,4 @@ int main(int argc, char *argv[]){
 
   close(sockfd);
   return 0;
-}  
+}
