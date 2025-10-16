@@ -197,11 +197,15 @@ int main(int argc, char *argv[]){
         line_start = newline + 1;
       }
 
-      recv_len = strlen(line_start);
-      if (recv_len > 0) {
+      size_t processed = line_start - recv_buf;
+      if (processed < recv_len) {
+        recv_len = recv_len - processed;
         memmove(recv_buf, line_start, recv_len);
+        recv_buf[recv_len] = '\0';
+      } else {
+        recv_len = 0;
+        recv_buf[0] = '\0';
       }
-      recv_buf[recv_len] = '\0';
       
       if (input_len > 0) {
         printf("> %.*s", (int)input_len, input_buf);
